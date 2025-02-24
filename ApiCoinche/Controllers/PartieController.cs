@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-//using ApiCoinche.Models;
+using ApiCoinche.Models;
 
 namespace ApiCoinche.Controllers;
 
@@ -15,76 +15,61 @@ public class PartieController : ControllerBase
         _context = context;
     }
 
-    // GET: api/partie
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Partie>>> GetProfils()
-    {
-        // Get parties and related lists
-        var parties = _context.Parties;
-        return await parties.ToListAsync();
-    }
-
     // GET: api/partie/2
     [HttpGet("{id}")]
-    public async Task<ActionResult<Partie>> GetPartie(int id)
-    {
-        // Find profil and related list
-        // SingleAsync() throws an exception if no profil is found (which is possible, depending on id)
-        // SingleOrDefaultAsync() is a safer choice here
-        var partie = await _context.Parties.SingleOrDefaultAsync(t => t.Id == id);
-
-        if (partie == null)
-            return NotFound();
-
-        return partie;
-    }
-
-    // POST: api/partie
-    [HttpPost]
-    public async Task<ActionResult<Partie>> PostPartie(Partie partie)
-    {
-        _context.Parties.Add(partie);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetPartie), new { id = partie.Id }, partie);
-    }
-
-    // PUT: api/partie/2
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutPartie(int id, Partie partie)
-    {
-        if (id != partie.Id)
-            return BadRequest();
-
-        _context.Entry(partie).State = EntityState.Modified;
-
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!_context.Profils.Any(m => m.Id == id))
-                return NotFound();
-            else
-                throw;
-        }
-
-        return NoContent();
-    }
-
-    // DELETE: api/partie/2
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeletePartieItem(int id)
+    public async Task<ActionResult<PartieDTO>> GetPartie(int id)
     {
         var partie = await _context.Parties.FindAsync(id);
 
         if (partie == null)
             return NotFound();
 
-        _context.Parties.Remove(partie);
+        return new PartieDTO(partie);
+    }
+
+    // POST: api/partie
+    [HttpPost]
+    public async Task<ActionResult<PartieDTO>> PostPartie(Partie partie)
+    {
+        if (partie.JoueursIds.Count != 4 || partie.GagnantsIds.Count != 2)
+            return BadRequest("Une partie doit avoir 4 joueurs et exactement 2 gagnants.");
+
+        // Récupération des profils des joueurs
+        var joueurs = await _context.Profils
+            .Where(p => partie.JoueursIds.Contains(p.Id))
+            .ToListAsync();
+
+        if (joueurs.Count != 4)
+            return BadRequest("Certains joueurs n'existent pas.");
+
+        // Séparation des gagnants et perdants
+        var gagnants = joueurs.Where(j => partie.GagnantsIds.Contains(j.Id)).ToList();
+        var perdants = joueurs.Where(j => !partie.GagnantsIds.Contains(j.Id)).ToList();
+
+        // Calcul de la mise à jour du PointsClassement
+        foreach (var gagnant in gagnants)
+        {
+            double gain = partie.PointsClassement * (1 - ExpectedScore(gagnant.PointsClassement, perdants.Average(p => p.PointsClassement)));
+            gagnant.PointsClassement += gain;
+            gagnant.Victoires++;
+            gagnant.TotalParties++;
+        }
+
+        foreach (var perdant in perdants)
+        {
+            double perte = partie.PointsClassement * (0 - ExpectedScore(perdant.PointsClassement, gagnants.Average(g => g.PointsClassement)));
+            perdant.PointsClassement += perte;
+            perdant.TotalParties++;
+        }
+
+        _context.Parties.Add(partie);
         await _context.SaveChangesAsync();
 
-        return NoContent();
-    } 
+        return CreatedAtAction(nameof(GetPartie), new { id = partie.Id }, new PartieDTO(partie));
+    }
+
+    private double ExpectedScore(double playerRating, double opponentRating)
+    {
+        return 1 / (1 + Math.Pow(10, (opponentRating - playerRating) / 400));
+    }
 }

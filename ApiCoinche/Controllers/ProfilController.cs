@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-//using ApiCoinche.Models;
+using ApiCoinche.Models;
 
 namespace ApiCoinche.Controllers;
 
@@ -17,36 +17,33 @@ public class ProfilController : ControllerBase
 
     // GET: api/profil
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Profil>>> GetProfils()
+    public async Task<ActionResult<IEnumerable<ProfilDTO>>> GetProfils()
     {
-        // Get profils and related lists
-        var profils = _context.Profils;
-        return await profils.ToListAsync();
+        var profils = await _context.Profils.ToListAsync();
+        return profils.Select(p => new ProfilDTO(p)).ToList();
     }
 
     // GET: api/profil/2
     [HttpGet("{id}")]
-    public async Task<ActionResult<Profil>> GetProfil(int id)
+    public async Task<ActionResult<ProfilDTO>> GetProfil(int id)
     {
-        // Find profil and related list
-        // SingleAsync() throws an exception if no profil is found (which is possible, depending on id)
-        // SingleOrDefaultAsync() is a safer choice here
-        var profil = await _context.Profils.SingleOrDefaultAsync(t => t.Id == id);
+        var profil = await _context.Profils.FindAsync(id);
 
         if (profil == null)
             return NotFound();
 
-        return profil;
+        return new ProfilDTO(profil);
     }
 
     // POST: api/profil
     [HttpPost]
-    public async Task<ActionResult<Profil>> PostProfil(Profil profil)
+    public async Task<ActionResult<ProfilDTO>> PostProfil(Profil profil)
     {
         _context.Profils.Add(profil);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetProfil), new { id = profil.Id }, profil);
+        var profilDTO = new ProfilDTO(profil);
+        return CreatedAtAction(nameof(GetProfil), new { id = profil.Id }, profilDTO);
     }
 
     // PUT: api/profil/2
@@ -54,7 +51,7 @@ public class ProfilController : ControllerBase
     public async Task<IActionResult> PutProfil(int id, Profil profil)
     {
         if (id != profil.Id)
-            return BadRequest();
+            return BadRequest("L'ID dans l'URL ne correspond pas à l'ID du profil.");
 
         _context.Entry(profil).State = EntityState.Modified;
 
@@ -75,7 +72,7 @@ public class ProfilController : ControllerBase
 
     // DELETE: api/profil/2
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteProfilItem(int id)
+    public async Task<IActionResult> DeleteProfil(int id)
     {
         var profil = await _context.Profils.FindAsync(id);
 
@@ -86,5 +83,16 @@ public class ProfilController : ControllerBase
         await _context.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    // GET: api/profil/classement
+    [HttpGet("classement")]
+    public async Task<ActionResult<IEnumerable<ProfilDTO>>> GetClassement()
+    {
+        var profils = await _context.Profils
+            .OrderByDescending(p => p.PointsClassement)
+            .ToListAsync();
+
+        return profils.Select(p => new ProfilDTO(p)).ToList();
     }
 }
