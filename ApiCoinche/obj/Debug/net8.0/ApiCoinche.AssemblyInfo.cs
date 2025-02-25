@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ApiCoinche")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1fdb0c994441b4cc817b3d0c134e5b14a8661c17")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6037ceb8bc19b4d41eb36342f9c7a7ca6cab4c60")]
 [assembly: System.Reflection.AssemblyProductAttribute("ApiCoinche")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ApiCoinche")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
