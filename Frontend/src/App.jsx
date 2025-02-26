@@ -3,6 +3,8 @@ import Connexion from "./pages/Connexion";
 import Inscription from "./pages/Inscription";
 import Home from "./pages/Home";
 
+
+
 export default function App() {
   return (
     <Routes>
