@@ -5,6 +5,9 @@ public class Profil
     public string Mail { get; set; } = null!;
     public string Mdp { get; set; } = null!;
     public Famille Famille { get; set; } 
+    
+    // Ajout de la clé étrangère pour DuoFav
+    public int? DuoFavId { get; set; }
     public Profil? DuoFav { get; set; }
     
     // Classement Elo (PointsClassement)

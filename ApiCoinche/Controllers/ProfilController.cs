@@ -37,23 +37,60 @@ public class ProfilController : ControllerBase
 
     // POST: api/profil
     [HttpPost]
-    public async Task<ActionResult<ProfilDTO>> PostProfil(Profil profil)
+    public async Task<ActionResult<ProfilDTO>> PostProfil(ProfilInputDTO input)
     {
+        // Valider si DuoFavId est fourni et correspond à un profil existant
+        if (input.DuoFavId.HasValue)
+        {
+            var duoFav = await _context.Profils.FindAsync(input.DuoFavId.Value);
+            if (duoFav == null)
+            {
+                return BadRequest("Le duoFav spécifié n'existe pas.");
+            }
+        }
+
+        var profil = new Profil
+        {
+            Blaze = input.Blaze,
+            Mail = input.Mail,
+            Mdp = input.Mdp,
+            Famille = input.Famille,
+            DuoFavId = input.DuoFavId,
+            // Les autres propriétés (PointsClassement, PartiesJoueesIds, Victoires, TotalParties) seront initialisées par défaut
+        };
+
         _context.Profils.Add(profil);
         await _context.SaveChangesAsync();
 
-        var profilDTO = new ProfilDTO(profil);
-        return CreatedAtAction(nameof(GetProfil), new { id = profil.Id }, profilDTO);
+        return CreatedAtAction(nameof(GetProfil), new { id = profil.Id }, new ProfilDTO(profil));
     }
 
     // PUT: api/profil/2
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutProfil(int id, Profil profil)
+    public async Task<IActionResult> PutProfil(int id, ProfilInputDTO input)
     {
-        if (id != profil.Id)
-            return BadRequest("L'ID dans l'URL ne correspond pas à l'ID du profil.");
+        var profil = await _context.Profils.FindAsync(id);
+        if (profil == null)
+        {
+            return NotFound();
+        }
 
-        _context.Entry(profil).State = EntityState.Modified;
+        // Valider si DuoFavId est fourni et correspond à un profil existant
+        if (input.DuoFavId.HasValue)
+        {
+            var duoFav = await _context.Profils.FindAsync(input.DuoFavId.Value);
+            if (duoFav == null)
+            {
+                return BadRequest("Le duoFav spécifié n'existe pas.");
+            }
+        }
+
+        // Mise à jour des propriétés du profil avec les valeurs du DTO
+        profil.Blaze = input.Blaze;
+        profil.Mail = input.Mail;
+        profil.Mdp = input.Mdp;
+        profil.Famille = input.Famille;
+        profil.DuoFavId = input.DuoFavId;
 
         try
         {
@@ -61,7 +98,7 @@ public class ProfilController : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!_context.Profils.Any(m => m.Id == id))
+            if (!_context.Profils.Any(p => p.Id == id))
                 return NotFound();
             else
                 throw;
