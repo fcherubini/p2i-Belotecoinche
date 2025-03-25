@@ -10,7 +10,7 @@ import Regles from './pages/Regles';
 import Parametres from './pages/Parametres';
 import Actualites from './pages/Actualites';
 import Classement from './pages/Classement';
-import { Home } from 'lucide-react';
+import Home from './pages/Home';
 
 
 function App() {
