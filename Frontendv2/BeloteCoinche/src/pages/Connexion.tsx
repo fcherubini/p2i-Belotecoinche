@@ -1,50 +1,89 @@
-// pages/Connexion.jsx
-import React from 'react';
-import { Card } from '@/components/ui/card'; 
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 const Connexion = () => {
-  const navigate = useNavigate();
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Ici, vous pouvez ajouter votre logique de connexion si besoin
-    navigate('/home');
-  };
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    try {
+      await login(email, password)
+      navigate('/home')
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Card className="p-6 shadow-lg w-full max-w-sm">
-        <h2 className="text-xl font-bold mb-4">Connexion</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              className="w-full border border-gray-300 rounded p-2"
-              placeholder="Votre email"
-            />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="password" className="block text-sm font-medium mb-1">
-              Mot de passe
-            </label>
-            <input
-              id="password"
-              type="password"
-              className="w-full border border-gray-300 rounded p-2"
-              placeholder="Votre mot de passe"
-            />
-          </div>
-          <Button type="submit">Se connecter</Button>
-        </form>
+    <div className="min-h-screen flex items-center justify-center bg-teal-600 px-4">
+      <Card className="w-full max-w-md bg-orange-100 shadow-2xl rounded-2xl border border-orange-300">
+        <CardHeader>
+          <CardTitle className="text-2xl text-gray-900">Connexion</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          {error && (
+            <div className="text-red-500 font-semibold text-sm mb-4">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="email" className="text-gray-800">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="votre@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 bg-white border-gray-300 text-gray-900"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="password" className="text-gray-800">
+                Mot de passe
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="********"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 bg-white border-gray-300 text-gray-900"
+              />
+            </div>
+
+            <CardFooter className="px-0">
+              <Button
+                type="submit"
+                className="w-full bg-teal-600 text-white hover:bg-teal-700 transition font-semibold"
+              >
+                Se connecter
+              </Button>
+            </CardFooter>
+          </form>
+        </CardContent>
       </Card>
     </div>
-  );
-};
+  )
+}
 
-export default Connexion;
+export default Connexion

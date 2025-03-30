@@ -1,17 +1,23 @@
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// The aim of this is to add API controllers to the application
 builder.Services.AddControllers();
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-// You as a developer can use Swagger to interact with the API through a web interface
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add the database context to the application
-// This will allow the application to interact with the database
+// Ajout du contexte de base de données
 builder.Services.AddDbContext<CoincheContext>();
+
+// Configuration du CORS pour autoriser l'origine du frontend
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
@@ -21,6 +27,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowFrontend"); // Utilisation du middleware CORS
 
 app.UseHttpsRedirection();
 app.MapControllers();

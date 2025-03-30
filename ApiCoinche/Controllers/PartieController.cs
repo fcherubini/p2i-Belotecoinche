@@ -27,6 +27,19 @@ public class PartieController : ControllerBase
         return new PartieDTO(partie);
     }
 
+    // ✅ NOUVEAU : GET parties jouées par un utilisateur
+    // GET: api/partie/by-user/3
+    [HttpGet("by-user/{userId}")]
+    public async Task<ActionResult<IEnumerable<PartieDTO>>> GetPartiesByUser(int userId)
+    {
+        var parties = await _context.Parties
+            .Where(p => p.JoueursIds.Contains(userId))
+            .OrderByDescending(p => p.Id)
+            .ToListAsync();
+
+        return parties.Select(p => new PartieDTO(p)).ToList();
+    }
+
     // POST: api/partie
     [HttpPost]
     public async Task<ActionResult<PartieDTO>> PostPartie(Partie partie)
@@ -46,71 +59,49 @@ public class PartieController : ControllerBase
         var gagnants = joueurs.Where(j => partie.GagnantsIds.Contains(j.Id)).ToList();
         var perdants = joueurs.Where(j => !partie.GagnantsIds.Contains(j.Id)).ToList();
 
-        // Paramètres de bonus (ajuste-les à ta convenance)
         double bonusDuoFav = 5.0;
         double bonusSameFamily = 3.0;
 
-        // --- Calcul de la mise à jour du PointsClassement pour chaque gagnant
         foreach (var gagnant in gagnants)
         {
-            // Calcul standard Elo
-            double gain = partie.PointsClassement * 
+            double gain = partie.PointsClassement *
                           (1 - ExpectedScore(gagnant.PointsClassement, perdants.Average(p => p.PointsClassement)));
 
-            // Calcul du bonus éventuel
             double bonus = 0;
-
-            // On récupère l'autre gagnant pour vérifier duoFav / même Famille
             var autreGagnant = gagnants.FirstOrDefault(g => g.Id != gagnant.Id);
             if (autreGagnant != null)
             {
-                // Bonus si le gagnant a l'autre gagnant comme duoFav
-                // (si tu veux un vrai duo réciproque, vérifie aussi autreGagnant.DuoFavId == gagnant.Id)
                 if (gagnant.DuoFavId.HasValue && gagnant.DuoFavId.Value == autreGagnant.Id)
-                {
                     bonus += bonusDuoFav;
-                }
 
-                // Bonus si la Famille est identique
                 if (gagnant.Famille == autreGagnant.Famille)
-                {
                     bonus += bonusSameFamily;
-                }
             }
 
-            // Somme du gain + bonus
             double totalGain = gain + bonus;
-            // On arrondit ce total
             double arrondiGain = Math.Round(totalGain);
-
-            // Mise à jour du classement en arrondissant le nouveau total
             gagnant.PointsClassement = Math.Round(gagnant.PointsClassement + arrondiGain);
-
-            // Victoire et total parties
             gagnant.Victoires++;
             gagnant.TotalParties++;
         }
 
-        // --- Calcul de la perte Elo pour les perdants
         foreach (var perdant in perdants)
         {
-            double perte = partie.PointsClassement * 
+            double perte = partie.PointsClassement *
                            (0 - ExpectedScore(perdant.PointsClassement, gagnants.Average(g => g.PointsClassement)));
 
             double arrondiPerte = Math.Round(perte);
-
             perdant.PointsClassement = Math.Round(perdant.PointsClassement + arrondiPerte);
             perdant.TotalParties++;
         }
 
-        // Sauvegarde de la partie
         _context.Parties.Add(partie);
         await _context.SaveChangesAsync();
 
         return CreatedAtAction(nameof(GetPartie), new { id = partie.Id }, new PartieDTO(partie));
     }
 
-    // Méthode utilitaire de calcul Elo
+    // Méthode utilitaire Elo
     private double ExpectedScore(double playerRating, double opponentRating)
     {
         return 1 / (1 + Math.Pow(10, (opponentRating - playerRating) / 400));
