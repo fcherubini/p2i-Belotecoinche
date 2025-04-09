@@ -71,13 +71,24 @@ const Connexion = () => {
               />
             </div>
 
-            <CardFooter className="px-0">
+            <CardFooter className="px-0 flex flex-col gap-3">
               <Button
                 type="submit"
                 className="w-full bg-teal-600 text-white hover:bg-teal-700 transition font-semibold"
               >
                 Se connecter
               </Button>
+
+              <p className="text-sm text-center text-gray-700">
+                Pas encore de compte ?{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate('/inscription')}
+                  className="text-teal-700 font-semibold hover:underline"
+                >
+                  Créer mon profil
+                </button>
+              </p>
             </CardFooter>
           </form>
         </CardContent>

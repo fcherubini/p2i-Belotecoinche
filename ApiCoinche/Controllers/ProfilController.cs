@@ -15,7 +15,6 @@ public class ProfilController : ControllerBase
         _context = context;
     }
 
-    // GET: api/profil
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProfilDTO>>> GetProfils()
     {
@@ -23,30 +22,22 @@ public class ProfilController : ControllerBase
         return profils.Select(p => new ProfilDTO(p)).ToList();
     }
 
-    // GET: api/profil/2
     [HttpGet("{id}")]
     public async Task<ActionResult<ProfilDTO>> GetProfil(int id)
     {
         var profil = await _context.Profils.FindAsync(id);
-
-        if (profil == null)
-            return NotFound();
-
+        if (profil == null) return NotFound();
         return new ProfilDTO(profil);
     }
 
-    // POST: api/profil
     [HttpPost]
     public async Task<ActionResult<ProfilDTO>> PostProfil(ProfilInputDTO input)
     {
-        // Valider si DuoFavId est fourni et correspond à un profil existant
         if (input.DuoFavId.HasValue)
         {
             var duoFav = await _context.Profils.FindAsync(input.DuoFavId.Value);
             if (duoFav == null)
-            {
                 return BadRequest("Le duoFav spécifié n'existe pas.");
-            }
         }
 
         var profil = new Profil
@@ -55,8 +46,7 @@ public class ProfilController : ControllerBase
             Mail = input.Mail,
             Mdp = input.Mdp,
             Famille = input.Famille,
-            DuoFavId = input.DuoFavId,
-            // Les autres propriétés (PointsClassement, PartiesJoueesIds, Victoires, TotalParties) seront initialisées par défaut
+            DuoFavId = input.DuoFavId
         };
 
         _context.Profils.Add(profil);
@@ -65,56 +55,52 @@ public class ProfilController : ControllerBase
         return CreatedAtAction(nameof(GetProfil), new { id = profil.Id }, new ProfilDTO(profil));
     }
 
-    // PUT: api/profil/2
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutProfil(int id, ProfilInputDTO input)
+public async Task<IActionResult> PutProfil(int id, ProfilInputDTO input)
+{
+    var profil = await _context.Profils.FindAsync(id);
+    if (profil == null) return NotFound();
+
+    // 🔒 Validation optionnelle (fréquence max 1 par mois)
+    if (input.DuoFavId != profil.DuoFavId)
     {
-        var profil = await _context.Profils.FindAsync(id);
-        if (profil == null)
+        if (profil.DerniereModificationDuo.HasValue &&
+            profil.DerniereModificationDuo.Value.AddMonths(1) > DateTime.Now)
         {
-            return NotFound();
+            return BadRequest("Vous ne pouvez changer votre duo qu'une fois par mois.");
         }
 
-        // Valider si DuoFavId est fourni et correspond à un profil existant
-        if (input.DuoFavId.HasValue)
-        {
-            var duoFav = await _context.Profils.FindAsync(input.DuoFavId.Value);
-            if (duoFav == null)
-            {
-                return BadRequest("Le duoFav spécifié n'existe pas.");
-            }
-        }
-
-        // Mise à jour des propriétés du profil avec les valeurs du DTO
-        profil.Blaze = input.Blaze;
-        profil.Mail = input.Mail;
-        profil.Mdp = input.Mdp;
-        profil.Famille = input.Famille;
-        profil.DuoFavId = input.DuoFavId;
-
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!_context.Profils.Any(p => p.Id == id))
-                return NotFound();
-            else
-                throw;
-        }
-
-        return NoContent();
+        profil.DerniereModificationDuo = DateTime.Now;
     }
 
-    // DELETE: api/profil/2
+    // 💾 Mise à jour effective
+    profil.Blaze = input.Blaze;
+    profil.Mail = input.Mail;
+    profil.Mdp = input.Mdp;
+    profil.Famille = input.Famille;
+    profil.DuoFavId = input.DuoFavId;
+
+    try
+    {
+        await _context.SaveChangesAsync();
+    }
+    catch (DbUpdateConcurrencyException)
+    {
+        if (!_context.Profils.Any(p => p.Id == id))
+            return NotFound();
+        else
+            throw;
+    }
+
+    return NoContent();
+}
+
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProfil(int id)
     {
         var profil = await _context.Profils.FindAsync(id);
-
-        if (profil == null)
-            return NotFound();
+        if (profil == null) return NotFound();
 
         _context.Profils.Remove(profil);
         await _context.SaveChangesAsync();
@@ -122,7 +108,6 @@ public class ProfilController : ControllerBase
         return NoContent();
     }
 
-    // GET: api/profil/classement
     [HttpGet("classement")]
     public async Task<ActionResult<IEnumerable<ProfilDTO>>> GetClassement()
     {
@@ -131,5 +116,19 @@ public class ProfilController : ControllerBase
             .ToListAsync();
 
         return profils.Select(p => new ProfilDTO(p)).ToList();
+    }
+
+    // ✅ Nouveau endpoint : GET /api/users?query=...
+    [HttpGet("/api/users")]
+    public async Task<ActionResult<ProfilDTO>> GetUserByQuery([FromQuery] string query)
+    {
+        var profil = await _context.Profils
+            .FirstOrDefaultAsync(p =>
+                p.Blaze.ToLower() == query.ToLower() || p.Mail.ToLower() == query.ToLower());
+
+        if (profil == null)
+            return NotFound();
+
+        return new ProfilDTO(profil);
     }
 }

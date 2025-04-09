@@ -9,6 +9,7 @@ import Actualites from './pages/Actualites';
 import Classement from './pages/Classement';
 import Home from './pages/Home';
 import { AuthProvider } from './contexts/AuthContext';
+import Inscription from './pages/Inscription';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Connexion />} />
+          <Route path="/inscription" element={<Inscription />} />
           <Route path="/home" element={<Home />} />
           <Route path="/profil" element={<Profil />} />
           <Route path="/classement" element={<Classement />} />

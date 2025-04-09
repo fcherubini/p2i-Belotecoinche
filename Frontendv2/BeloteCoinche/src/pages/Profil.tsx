@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from "react"
 import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-  CardTitle,
+  Card, CardHeader, CardContent, CardFooter, CardTitle,
 } from "@/components/ui/card"
 import {
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
+  Avatar, AvatarImage, AvatarFallback,
 } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -18,13 +12,11 @@ import { X } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 
-// Fonction pour transformer l'ID enum famille en texte
 const getFamilleLabel = (familleId: number) => {
   const labels = ["Rouge", "Bleu", "Jaune", "Vert", "Orange"]
   return labels[familleId] ?? "Inconnue"
 }
 
-// Fonction pour appliquer une couleur selon la famille
 const getFamilleColor = (familleId: number) => {
   switch (familleId) {
     case 0: return "bg-red-500"
@@ -39,29 +31,64 @@ const getFamilleColor = (familleId: number) => {
 const Profil = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
-
+  const [updatedUser, setUpdatedUser] = useState(user)
   const [duoBlaze, setDuoBlaze] = useState<string | null>(null)
   const [rang, setRang] = useState<number | null>(null)
   const [parties, setParties] = useState<any[]>([])
+  const [joueursMap, setJoueursMap] = useState<Record<number, string>>({})
+  const [totalUsers, setTotalUsers] = useState<number>(4)
+  const [newDuoInput, setNewDuoInput] = useState("")
+  const [messageDuo, setMessageDuo] = useState<string | null>(null)
+  const { logout } = useAuth()
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
-  // Récupération du blaze du duo favori
+
   useEffect(() => {
-    const fetchDuoBlaze = async () => {
-      if (user?.duoFavId) {
-        try {
-          const res = await fetch(`http://localhost:5123/api/profil/${user.duoFavId}`)
-          const data = await res.json()
-          setDuoBlaze(data.blaze)
-        } catch (err) {
-          console.error("Erreur récupération duo :", err)
+    const fetchAll = async () => {
+      if (!user) return
+
+      try {
+        const [resUser, resParties, resAllUsers] = await Promise.all([
+          fetch(`http://localhost:5123/api/profil/${user.id}`),
+          fetch(`http://localhost:5123/api/partie/by-user/${user.id}`),
+          fetch("http://localhost:5123/api/profil"),
+        ])
+
+        const newUser = await resUser.json()
+        setUpdatedUser(newUser)
+        setTotalUsers((await resAllUsers.json()).length)
+
+        const partiesData = await resParties.json()
+        setParties(partiesData)
+
+        const ids = [...new Set(partiesData.flatMap((p: any) => p.joueursIds))]
+        ids.push(newUser.id) // ajouter soi-même pour éviter le "?"
+
+        const map: Record<number, string> = {}
+        await Promise.all(
+          ids.map(async (id) => {
+            const res = await fetch(`http://localhost:5123/api/profil/${id}`)
+            const data = await res.json()
+            map[id] = data.blaze
+          })
+        )
+        setJoueursMap(map)
+
+        if (newUser.duoFavId) {
+          const resDuo = await fetch(`http://localhost:5123/api/profil/${newUser.duoFavId}`)
+          const duo = await resDuo.json()
+          setDuoBlaze(duo.blaze)
+        } else {
+          setDuoBlaze(null)
         }
+      } catch (err) {
+        console.error("Erreur fetch profil/parties :", err)
       }
     }
 
-    fetchDuoBlaze()
-  }, [user?.duoFavId])
+    fetchAll()
+  }, [user])
 
-  // Récupération du classement
   useEffect(() => {
     const fetchClassement = async () => {
       if (!user) return
@@ -71,33 +98,18 @@ const Profil = () => {
         const index = data.findIndex((p: any) => p.id === user.id)
         setRang(index + 1)
       } catch (err) {
-        console.error("Erreur récupération classement :", err)
+        console.error("Erreur classement :", err)
       }
     }
-
     fetchClassement()
   }, [user])
 
-  // Récupération des parties jouées par le joueur
-  useEffect(() => {
-    const fetchParties = async () => {
-      if (!user) return
-      try {
-        const res = await fetch(`http://localhost:5123/api/partie/by-user/${user.id}`)
-        const data = await res.json()
-        setParties(data)
-      } catch (err) {
-        console.error("Erreur chargement des parties :", err)
-      }
-    }
+  if (!updatedUser) return <p>Chargement...</p>
 
-    fetchParties()
-  }, [user])
-
-  if (!user) return <p>Chargement...</p>
-
-  const defaites = user.totalParties - user.victoires
-  const winrate = user.winRate.toFixed(1)
+  const totalParties = parties.length
+  const totalVictoires = parties.filter((p) => p.gagnantsIds.includes(updatedUser.id)).length
+  const totalDefaites = totalParties - totalVictoires
+  const winrate = totalParties > 0 ? ((totalVictoires / totalParties) * 100).toFixed(1) : "0"
 
   return (
     <div className="min-h-screen bg-teal-600 flex items-center justify-center p-4 relative overflow-hidden">
@@ -110,39 +122,112 @@ const Profil = () => {
       </Button>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-5xl w-full max-h-[90vh]">
-        {/* Carte Profil principale */}
-        <Card
-          className={`col-span-1 sm:row-span-2 ${getFamilleColor(
-            user.famille
-          )} text-center flex flex-col items-center justify-center py-4 shadow-xl rounded-3xl text-white`}
-        >
+        {/* Profil */}
+        <Card className={`col-span-1 sm:row-span-2 ${getFamilleColor(updatedUser.famille)} text-center flex flex-col items-center justify-center py-4 shadow-xl rounded-3xl text-white`}>
           <Avatar className="w-20 h-20 mb-2 border-4 border-white">
-            <AvatarImage src="" alt="Avatar" />
-            <AvatarFallback>{user.blaze.slice(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarImage src="" />
+            <AvatarFallback>{updatedUser.blaze.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <h2 className="text-lg font-semibold">{user.blaze}</h2>
-          <p className="text-sm">Famille : {getFamilleLabel(user.famille)}</p>
-          <div className="bg-white text-gray-800 rounded-xl px-4 py-2 shadow mt-2">
+          <h2 className="text-lg font-semibold">{updatedUser.blaze}</h2>
+          <p className="text-sm">Famille : {getFamilleLabel(updatedUser.famille)}</p>
+
+          <div className="bg-white text-gray-800 rounded-xl px-4 py-2 shadow mt-4 w-[80%]">
             <p className="text-sm font-semibold">Duo Favori</p>
-            <p className="text-sm">{duoBlaze ?? "Aucun"}</p>
+            <p className="text-sm mb-2">{duoBlaze ?? "Aucun"}</p>
+            <input
+              type="text"
+              placeholder="Blaze ou mail"
+              value={newDuoInput}
+              onChange={(e) => setNewDuoInput(e.target.value)}
+              className="border border-gray-300 rounded px-2 py-1 text-sm w-full mb-2"
+            />
             <Button
               size="sm"
-              className="mt-2 h-7 px-3 bg-teal-600 text-white hover:bg-teal-700 text-xs"
+              className="h-7 px-3 bg-teal-600 text-white hover:bg-teal-700 text-xs w-full"
+              onClick={async () => {
+                if (!newDuoInput || !updatedUser) return
+
+                try {
+                  const res = await fetch(`http://localhost:5123/api/users?query=${encodeURIComponent(newDuoInput)}`)
+                  if (!res.ok) {
+                    setMessageDuo("Utilisateur introuvable.")
+                    return
+                  }
+                  const profilTrouve = await res.json()
+
+                  const resUpdate = await fetch(`http://localhost:5123/api/profil/${updatedUser.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      blaze: updatedUser.blaze,
+                      mail: updatedUser.mail,
+                      famille: updatedUser.famille,
+                      duoFavId: profilTrouve.id
+                    }),
+                  })
+
+                  if (resUpdate.ok) {
+                    setMessageDuo("Duo favori mis à jour 🎉")
+                    setDuoBlaze(profilTrouve.blaze)
+                    setNewDuoInput("")
+                  } else {
+                    const msg = await resUpdate.text()
+                    setMessageDuo(msg || "Erreur mise à jour.")
+                  }
+                } catch (err) {
+                  console.error(err)
+                  setMessageDuo("Erreur serveur.")
+                }
+              }}
             >
               Modifier
             </Button>
+            {messageDuo && <p className="text-xs text-center mt-1">{messageDuo}</p>}
           </div>
+          {/* Bouton Déconnexion avec confirmation */}
+{showLogoutConfirm ? (
+  <div className="mt-4 text-sm text-white space-y-2">
+    <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
+    <div className="flex justify-center gap-3">
+      <Button
+        className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1"
+        onClick={() => {
+          logout()
+          navigate("/connexion")
+        }}
+      >
+        Oui
+      </Button>
+      <Button
+        className="bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1"
+        onClick={() => setShowLogoutConfirm(false)}
+      >
+        Non
+      </Button>
+    </div>
+  </div>
+) : (
+  <Button
+    size="sm"
+    variant="outline"
+    className="mt-4 bg-white text-red-600 border-red-500 hover:bg-red-100 text-xs"
+    onClick={() => setShowLogoutConfirm(true)}
+  >
+    Déconnexion
+  </Button>
+)}
+
         </Card>
 
-        {/* Points + Statistiques */}
+        {/* Statistiques */}
         <Card className="col-span-1 bg-orange-100 shadow-xl rounded-3xl py-4">
           <CardHeader>
             <CardTitle className="text-base">Points & Statistiques</CardTitle>
           </CardHeader>
           <CardContent className="text-gray-800 space-y-2">
-            <p className="text-2xl font-mono">{user.pointsClassement} pts</p>
-            <p>Victoires : <span className="font-semibold">{user.victoires}</span></p>
-            <p>Défaites : <span className="font-semibold">{defaites}</span></p>
+            <p className="text-2xl font-mono">{updatedUser.pointsClassement} pts</p>
+            <p>Victoires : <span className="font-semibold">{totalVictoires}</span></p>
+            <p>Défaites : <span className="font-semibold">{totalDefaites}</span></p>
             <p className="text-sm text-gray-700">
               Taux de victoire : <span className="font-medium">{winrate}%</span>
             </p>
@@ -151,31 +236,21 @@ const Profil = () => {
 
         {/* Classement */}
         <Card className="col-span-1 bg-orange-100 shadow-xl rounded-3xl py-4 flex flex-col justify-between">
-          <div>
-            <CardHeader>
-              <CardTitle className="text-base">Classement</CardTitle>
-            </CardHeader>
-            <CardContent className="text-gray-800 space-y-1">
-              <p>
-                Rang :{" "}
-                <Badge className="bg-teal-600 text-white text-sm">
-                  {rang ? `#${rang}` : "?"}
-                </Badge>
-              </p>
-              <p>Sur 4 joueurs</p>
-            </CardContent>
-          </div>
+          <CardHeader>
+            <CardTitle className="text-base">Classement</CardTitle>
+          </CardHeader>
+          <CardContent className="text-gray-800 space-y-1">
+            <p>Rang : <Badge className="bg-teal-600 text-white text-sm">{rang ? `#${rang}` : "?"}</Badge></p>
+            <p>Sur {totalUsers} joueurs</p>
+          </CardContent>
           <CardFooter>
-            <Button
-              className="w-full bg-teal-600 text-white hover:bg-teal-700"
-              onClick={() => navigate("/classement")}
-            >
+            <Button className="w-full bg-teal-600 text-white hover:bg-teal-700" onClick={() => navigate("/classement")}>
               Voir plus
             </Button>
           </CardFooter>
         </Card>
 
-        {/* Historique des parties */}
+        {/* Historique */}
         <Card className="col-span-2 bg-orange-100 shadow-xl rounded-3xl py-3">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Historique des Parties</CardTitle>
@@ -183,23 +258,27 @@ const Profil = () => {
           <CardContent className="h-48 overflow-hidden pt-0">
             <ScrollArea className="h-full pr-2">
               {parties.length === 0 ? (
-                <p className="text-center text-sm text-gray-500">
-                  Aucune partie jouée
-                </p>
+                <p className="text-center text-sm text-gray-500">Aucune partie jouée</p>
               ) : (
                 <div className="space-y-2">
                   {parties.map((partie, index) => {
-                    const victoire = partie.gagnantsIds.includes(user.id)
+                    const victoire = partie.gagnantsIds.includes(updatedUser.id)
+                    const couleurFond = victoire ? "bg-green-100" : "bg-red-100"
+                    const indexUser = partie.joueursIds.indexOf(updatedUser.id)
+                    const partenaireId = indexUser % 2 === 0 ? partie.joueursIds[indexUser + 2] : partie.joueursIds[indexUser - 2]
+                    const adversairesIds = partie.joueursIds.filter((id: number) => id !== updatedUser.id && id !== partenaireId)
+                    const partenaire = joueursMap[partenaireId] ?? "?"
+                    const adversaires = adversairesIds.map((id: number) => joueursMap[id] ?? "?").join(" & ")
+                    const points = victoire ? `+${partie.pointsClassement}` : `-${partie.pointsClassement}`
+
                     return (
-                      <div
-                        key={index}
-                        className="bg-white rounded-lg py-2 px-3 shadow flex justify-between items-center text-sm"
-                      >
-                        <p className="font-semibold">
-                          {victoire ? "✅ Victoire" : "❌ Défaite"} – {partie.pointsClassement} pts
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Partie #{partie.id}
+                      <div key={index} className={`${couleurFond} rounded-lg py-2 px-3 shadow flex flex-col text-sm`}>
+                        <div className="flex justify-between items-center">
+                          <p className="font-semibold">{victoire ? "✅ Victoire" : "❌ Défaite"} {points}</p>
+                          <p className="text-xs text-gray-500">Partie #{partie.id}</p>
+                        </div>
+                        <p className="text-xs mt-1 text-gray-700">
+                          Partenaire : {partenaire} | Adversaires : {adversaires}
                         </p>
                       </div>
                     )

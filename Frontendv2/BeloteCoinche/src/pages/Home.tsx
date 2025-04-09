@@ -11,14 +11,16 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Gamepad2, Sword } from "lucide-react"
 import CustomMenubar from "@/components/custom/menubarcustom"
+import { Navigate, useNavigate } from "react-router-dom"
 
 const Home: React.FC = () => {
   const [mode, setMode] = useState<"belote" | "coinche" | null>(null)
 
+  const navigate = useNavigate()
   const handleStartGame = () => {
     if (!mode) return
     console.log("Mode choisi :", mode)
-    // Naviguer ou lancer une partie ici
+    navigate("/nouvelle-partie")
   }
 
   return (

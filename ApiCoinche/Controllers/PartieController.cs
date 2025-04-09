@@ -28,6 +28,14 @@ public class PartieController : ControllerBase
     }
 
     // ✅ NOUVEAU : GET parties jouées par un utilisateur
+    
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<PartieDTO>>> GetParties()
+    {
+        var parties = await _context.Parties.OrderBy(p => p.Id).ToListAsync();
+        return parties.Select(p => new PartieDTO(p)).ToList();
+    }
+
     // GET: api/partie/by-user/3
     [HttpGet("by-user/{userId}")]
     public async Task<ActionResult<IEnumerable<PartieDTO>>> GetPartiesByUser(int userId)

@@ -9,6 +9,8 @@ public class Profil
     // Ajout de la clé étrangère pour DuoFav
     public int? DuoFavId { get; set; }
     public Profil? DuoFav { get; set; }
+
+    public DateTime? DerniereModificationDuo { get; set; }
     
     // Classement Elo (PointsClassement)
     public double PointsClassement { get; set; } = 1000; // Score de départ pour tous les joueurs
