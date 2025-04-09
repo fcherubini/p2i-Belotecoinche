@@ -1,3 +1,6 @@
+// gère toutes les parties jouées sur l'appli (création, historique, recherche)
+
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ApiCoinche.Models;
@@ -27,8 +30,7 @@ public class PartieController : ControllerBase
         return new PartieDTO(partie);
     }
 
-    // ✅ NOUVEAU : GET parties jouées par un utilisateur
-    
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PartieDTO>>> GetParties()
     {

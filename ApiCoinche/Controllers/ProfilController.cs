@@ -1,3 +1,5 @@
+// gère toutes les opérations CRUD sur le profil d'un joueur
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ApiCoinche.Models;
@@ -61,7 +63,7 @@ public async Task<IActionResult> PutProfil(int id, ProfilInputDTO input)
     var profil = await _context.Profils.FindAsync(id);
     if (profil == null) return NotFound();
 
-    // 🔒 Validation optionnelle (fréquence max 1 par mois)
+    // validation optionnelle (fréquence max 1 par mois)
     if (input.DuoFavId != profil.DuoFavId)
     {
         if (profil.DerniereModificationDuo.HasValue &&
@@ -73,7 +75,7 @@ public async Task<IActionResult> PutProfil(int id, ProfilInputDTO input)
         profil.DerniereModificationDuo = DateTime.Now;
     }
 
-    // 💾 Mise à jour effective
+    // mise à jour effective
     profil.Blaze = input.Blaze;
     profil.Mail = input.Mail;
     profil.Mdp = input.Mdp;
@@ -118,7 +120,7 @@ public async Task<IActionResult> PutProfil(int id, ProfilInputDTO input)
         return profils.Select(p => new ProfilDTO(p)).ToList();
     }
 
-    // ✅ Nouveau endpoint : GET /api/users?query=...
+    // vérifie l'existence d'un joueur (par mail/blaze) pour lancer une partie
     [HttpGet("/api/users")]
     public async Task<ActionResult<ProfilDTO>> GetUserByQuery([FromQuery] string query)
     {

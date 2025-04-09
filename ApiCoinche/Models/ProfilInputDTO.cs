@@ -1,3 +1,7 @@
+// permet de valider les entrées venant du frontEnd, 
+// il reçoit les données lors de la création/modif d'un profil,
+// contient donc les infos nécessaires à la création d'un profil
+
 namespace ApiCoinche.Models
 {
     public class ProfilInputDTO

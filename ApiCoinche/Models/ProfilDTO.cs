@@ -1,3 +1,5 @@
+// DTO utilisé pour envoyer les informations d'un joueur (hors mdp) vers le frontEnd de manière sécurisée
+
 namespace ApiCoinche.Models;
 
 public class ProfilDTO
@@ -8,7 +10,7 @@ public class ProfilDTO
     public Famille Famille { get; set; }
     public int? DuoFavId { get; set; }
     
-    public double PointsClassement { get; set; }  // Classement Elo
+    public double PointsClassement { get; set; } 
     public List<int> PartiesJoueesIds { get; set; } = new List<int>();
     public int Victoires { get; set; }
     public int TotalParties { get; set; }

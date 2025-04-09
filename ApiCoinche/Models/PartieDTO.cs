@@ -1,3 +1,5 @@
+// DTO utilisé pour envoyer les infos d'une partie au frontEnd
+
 namespace ApiCoinche.Models;
 
 public class PartieDTO

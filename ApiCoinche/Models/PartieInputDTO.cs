@@ -1,3 +1,6 @@
+// reçoit une nouvelle partie depuis le frontEnd
+// contient les infos nécessaires au stockage d'une partie
+
 namespace ApiCoinche.Models
 {
     public class PartieInputDTO
