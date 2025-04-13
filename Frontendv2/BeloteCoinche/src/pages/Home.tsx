@@ -1,25 +1,24 @@
-import React, { useState } from "react"
+// page d'accueil permettant à l'utilisateur de choisir un mode de jeu (belote ou coinche),
+// puis de démarrer une nouvelle partie en le redirigeant vers l'écran de configuration
+
+import { useState } from "react"
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card"
+  Card, CardHeader, CardTitle, CardDescription,
+  CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Gamepad2, Sword } from "lucide-react"
 import CustomMenubar from "@/components/custom/menubarcustom"
-import { Navigate, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 
 const Home: React.FC = () => {
   const [mode, setMode] = useState<"belote" | "coinche" | null>(null)
 
   const navigate = useNavigate()
+
+  // démarre une nouvelle partie si un mode est sélectionné, en redirigeant vers la page de création
   const handleStartGame = () => {
     if (!mode) return
-    console.log("Mode choisi :", mode)
     navigate("/nouvelle-partie")
   }
 
@@ -33,7 +32,7 @@ const Home: React.FC = () => {
 
         <CardContent>
           <div className="flex space-x-4">
-            {/* Belote */}
+            {/* belote */}
             <div
               onClick={() => setMode("belote")}
               className={cn(
@@ -47,7 +46,7 @@ const Home: React.FC = () => {
               <span className="font-semibold">Belote</span>
             </div>
 
-            {/* Coinche */}
+            {/* coinche */}
             <div
               onClick={() => setMode("coinche")}
               className={cn(
@@ -74,7 +73,6 @@ const Home: React.FC = () => {
         </CardFooter>
       </Card>
 
-      {/* Menubar en bas */}
       <CustomMenubar active="accueil" />
     </div>
   )

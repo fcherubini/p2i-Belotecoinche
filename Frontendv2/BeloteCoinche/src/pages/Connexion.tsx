@@ -1,4 +1,6 @@
-import React, { useState } from 'react'
+// page de connexion permettant à l'utilisateur de s'authentifier et d'accéder à l'application
+
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -6,12 +8,13 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  CardFooter,
+  CardFooter
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+// composant connexion : gère la soumission du formulaire de login et redirige vers la page d'accueil
 const Connexion = () => {
   const { login } = useAuth()
   const navigate = useNavigate()
@@ -80,7 +83,7 @@ const Connexion = () => {
               </Button>
 
               <p className="text-sm text-center text-gray-700">
-                Pas encore de compte ?{" "}
+                Pas encore de compte ?{' '}
                 <button
                   type="button"
                   onClick={() => navigate('/inscription')}

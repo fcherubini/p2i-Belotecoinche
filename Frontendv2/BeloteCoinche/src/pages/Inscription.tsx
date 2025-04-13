@@ -1,23 +1,19 @@
-import React, { useState } from 'react'
+// page d'inscription permettant à un utilisateur de créer un compte et de choisir sa famille
+
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
+  Card, CardHeader, CardTitle, CardContent, CardFooter
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem
+  Select, SelectTrigger, SelectValue,
+  SelectContent, SelectItem
 } from '@/components/ui/select'
 
+// composant inscription : envoie les infos du formulaire à l'api pour créer un compte
 const Inscription = () => {
   const navigate = useNavigate()
   const [blaze, setBlaze] = useState('')

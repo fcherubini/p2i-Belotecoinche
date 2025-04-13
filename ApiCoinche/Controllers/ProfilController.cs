@@ -57,7 +57,7 @@ public class ProfilController : ControllerBase
         return CreatedAtAction(nameof(GetProfil), new { id = profil.Id }, new ProfilDTO(profil));
     }
 
-    [HttpPut("{id}")]
+[HttpPut("{id}")]
 public async Task<IActionResult> PutProfil(int id, ProfilInputDTO input)
 {
     var profil = await _context.Profils.FindAsync(id);
@@ -75,12 +75,17 @@ public async Task<IActionResult> PutProfil(int id, ProfilInputDTO input)
         profil.DerniereModificationDuo = DateTime.Now;
     }
 
-    // mise à jour effective
+    // mise à jour des champs principaux
     profil.Blaze = input.Blaze;
     profil.Mail = input.Mail;
-    profil.Mdp = input.Mdp;
     profil.Famille = input.Famille;
     profil.DuoFavId = input.DuoFavId;
+
+    // mise à jour du mot de passe uniquement si fourni
+    if (!string.IsNullOrWhiteSpace(input.Mdp))
+    {
+        profil.Mdp = input.Mdp;
+    }
 
     try
     {

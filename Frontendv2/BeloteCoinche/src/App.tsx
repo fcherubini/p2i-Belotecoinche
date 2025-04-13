@@ -1,16 +1,18 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Connexion from './pages/Connexion';
-import Profil from './pages/Profil';
-import NouvellePartie from './pages/NouvellePartie';
-import Regles from './pages/Regles';
-import Parametres from './pages/Parametres';
-import Actualites from './pages/Actualites';
-import Classement from './pages/Classement';
-import Home from './pages/Home';
-import { AuthProvider } from './contexts/AuthContext';
-import Inscription from './pages/Inscription';
+// composant racine de l'application, configure le routage et englobe les pages avec le provider d'authentification
 
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import Connexion from './pages/Connexion'
+import Profil from './pages/Profil'
+import NouvellePartie from './pages/NouvellePartie'
+import Regles from './pages/Regles'
+import Parametres from './pages/Parametres'
+import Actualites from './pages/Actualites'
+import Classement from './pages/Classement'
+import Home from './pages/Home'
+import { AuthProvider } from './contexts/AuthContext'
+import Inscription from './pages/Inscription'
+
+// configure toutes les routes de l'application
 function App() {
   return (
     <AuthProvider>
@@ -29,7 +31,7 @@ function App() {
         </Routes>
       </Router>
     </AuthProvider>
-  );
+  )
 }
 
-export default App;
+export default App

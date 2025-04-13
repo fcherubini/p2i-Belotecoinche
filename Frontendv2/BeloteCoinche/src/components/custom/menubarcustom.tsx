@@ -1,14 +1,11 @@
-import React from "react"
+// composant de barre de navigation fixe en bas de l'écran, avec indication de la page active
+
 import { useNavigate } from "react-router-dom"
 import {
-  Menubar,
-  MenubarMenu,
-  MenubarTrigger,
+  Menubar, MenubarMenu, MenubarTrigger
 } from "@/components/ui/menubar"
 import {
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
+  Avatar, AvatarImage, AvatarFallback
 } from "@/components/ui/avatar"
 import { Button } from "../ui/button"
 import { Trophy, Newspaper, Book, Settings, Home } from "lucide-react"
@@ -17,12 +14,12 @@ interface CustomMenubarProps {
   active?: "classement" | "actualites" | "regles" | "parametres" | "accueil"
 }
 
+// composant custommenubar : affiche une barre avec navigation et avatar, et gère la mise en évidence de la page active
 const CustomMenubar: React.FC<CustomMenubarProps> = ({ active }) => {
   const navigate = useNavigate()
 
   return (
     <Menubar className="fixed bottom-4 left-4 right-4 z-50 h-20 flex items-center justify-between px-6 bg-teal-500 text-white rounded-xl shadow-xl border border-white/10">
-      {/* Avatar + boutons à gauche */}
       <div className="flex items-center space-x-6">
         <MenubarMenu>
           <MenubarTrigger
@@ -39,7 +36,6 @@ const CustomMenubar: React.FC<CustomMenubarProps> = ({ active }) => {
           </MenubarTrigger>
         </MenubarMenu>
 
-        {/* Navigation */}
         <div className="flex items-center space-x-4">
           <Button
             variant="ghost"
@@ -84,7 +80,6 @@ const CustomMenubar: React.FC<CustomMenubarProps> = ({ active }) => {
         </div>
       </div>
 
-      {/* Paramètres à droite */}
       <Button
         variant="ghost"
         onClick={() => navigate("/parametres")}

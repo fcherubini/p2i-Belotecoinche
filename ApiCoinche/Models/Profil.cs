@@ -5,7 +5,7 @@ public class Profil
     public int Id { get; set; }
     public string Blaze { get; set; } = null!;
     public string Mail { get; set; } = null!;
-    public string Mdp { get; set; } = null!;
+    public string? Mdp { get; set; } = null!;
     public Famille Famille { get; set; }
 
     public int? DuoFavId { get; set; } //clé étrangère optionnelle

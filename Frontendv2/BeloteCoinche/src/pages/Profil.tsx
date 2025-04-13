@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react"
+// page profil qui affiche les informations utilisateur, ses statistiques, son classement, son duo favori et l'historique de ses parties
+
 import {
-  Card, CardHeader, CardContent, CardFooter, CardTitle,
+  Card, CardHeader, CardContent, CardFooter, CardTitle
 } from "@/components/ui/card"
 import {
-  Avatar, AvatarImage, AvatarFallback,
+  Avatar, AvatarImage, AvatarFallback
 } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { X } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
+import { useEffect, useState } from "react"
 
 const getFamilleLabel = (familleId: number) => {
   const labels = ["Rouge", "Bleu", "Jaune", "Vert", "Orange"]
@@ -28,9 +30,10 @@ const getFamilleColor = (familleId: number) => {
   }
 }
 
+// composant profil principal : affiche les données utilisateur, les met à jour et gère les appels à l'api
 const Profil = () => {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const [updatedUser, setUpdatedUser] = useState(user)
   const [duoBlaze, setDuoBlaze] = useState<string | null>(null)
   const [rang, setRang] = useState<number | null>(null)
@@ -39,10 +42,9 @@ const Profil = () => {
   const [totalUsers, setTotalUsers] = useState<number>(4)
   const [newDuoInput, setNewDuoInput] = useState("")
   const [messageDuo, setMessageDuo] = useState<string | null>(null)
-  const { logout } = useAuth()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
-
+  // récupère les données utilisateur, les parties jouées et les pseudos des autres joueurs
   useEffect(() => {
     const fetchAll = async () => {
       if (!user) return
@@ -62,7 +64,7 @@ const Profil = () => {
         setParties(partiesData)
 
         const ids = [...new Set(partiesData.flatMap((p: any) => p.joueursIds))]
-        ids.push(newUser.id) // ajouter soi-même pour éviter le "?"
+        ids.push(newUser.id)
 
         const map: Record<number, string> = {}
         await Promise.all(
@@ -82,13 +84,14 @@ const Profil = () => {
           setDuoBlaze(null)
         }
       } catch (err) {
-        console.error("Erreur fetch profil/parties :", err)
+        console.error("erreur fetch profil/parties :", err)
       }
     }
 
     fetchAll()
   }, [user])
 
+  // récupère le rang actuel du joueur dans le classement
   useEffect(() => {
     const fetchClassement = async () => {
       if (!user) return
@@ -98,7 +101,7 @@ const Profil = () => {
         const index = data.findIndex((p: any) => p.id === user.id)
         setRang(index + 1)
       } catch (err) {
-        console.error("Erreur classement :", err)
+        console.error("erreur classement :", err)
       }
     }
     fetchClassement()
@@ -122,7 +125,6 @@ const Profil = () => {
       </Button>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-5xl w-full max-h-[90vh]">
-        {/* Profil */}
         <Card className={`col-span-1 sm:row-span-2 ${getFamilleColor(updatedUser.famille)} text-center flex flex-col items-center justify-center py-4 shadow-xl rounded-3xl text-white`}>
           <Avatar className="w-20 h-20 mb-2 border-4 border-white">
             <AvatarImage src="" />
@@ -161,6 +163,7 @@ const Profil = () => {
                     body: JSON.stringify({
                       blaze: updatedUser.blaze,
                       mail: updatedUser.mail,
+                      mdp: updatedUser.mdp,
                       famille: updatedUser.famille,
                       duoFavId: profilTrouve.id
                     }),
@@ -184,42 +187,40 @@ const Profil = () => {
             </Button>
             {messageDuo && <p className="text-xs text-center mt-1">{messageDuo}</p>}
           </div>
-          {/* Bouton Déconnexion avec confirmation */}
-{showLogoutConfirm ? (
-  <div className="mt-4 text-sm text-white space-y-2">
-    <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
-    <div className="flex justify-center gap-3">
-      <Button
-        className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1"
-        onClick={() => {
-          logout()
-          navigate("/connexion")
-        }}
-      >
-        Oui
-      </Button>
-      <Button
-        className="bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1"
-        onClick={() => setShowLogoutConfirm(false)}
-      >
-        Non
-      </Button>
-    </div>
-  </div>
-) : (
-  <Button
-    size="sm"
-    variant="outline"
-    className="mt-4 bg-white text-red-600 border-red-500 hover:bg-red-100 text-xs"
-    onClick={() => setShowLogoutConfirm(true)}
-  >
-    Déconnexion
-  </Button>
-)}
 
+          {showLogoutConfirm ? (
+            <div className="mt-4 text-sm text-white space-y-2">
+              <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
+              <div className="flex justify-center gap-3">
+                <Button
+                  className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1"
+                  onClick={() => {
+                    logout()
+                    navigate("/connexion")
+                  }}
+                >
+                  Oui
+                </Button>
+                <Button
+                  className="bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1"
+                  onClick={() => setShowLogoutConfirm(false)}
+                >
+                  Non
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-4 bg-white text-red-600 border-red-500 hover:bg-red-100 text-xs"
+              onClick={() => setShowLogoutConfirm(true)}
+            >
+              Déconnexion
+            </Button>
+          )}
         </Card>
 
-        {/* Statistiques */}
         <Card className="col-span-1 bg-orange-100 shadow-xl rounded-3xl py-4">
           <CardHeader>
             <CardTitle className="text-base">Points & Statistiques</CardTitle>
@@ -234,7 +235,6 @@ const Profil = () => {
           </CardContent>
         </Card>
 
-        {/* Classement */}
         <Card className="col-span-1 bg-orange-100 shadow-xl rounded-3xl py-4 flex flex-col justify-between">
           <CardHeader>
             <CardTitle className="text-base">Classement</CardTitle>
@@ -250,7 +250,6 @@ const Profil = () => {
           </CardFooter>
         </Card>
 
-        {/* Historique */}
         <Card className="col-span-2 bg-orange-100 shadow-xl rounded-3xl py-3">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Historique des Parties</CardTitle>

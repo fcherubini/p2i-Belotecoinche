@@ -1,21 +1,18 @@
-import React, { useEffect, useState } from "react"
+// page de création d'une nouvelle partie : saisie des joueurs, suivi du score, détection des bonus et validation finale
+
+import { useEffect, useState } from "react"
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
+  Card, CardContent, CardHeader, CardTitle
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
 
+// composant nouvellepartie : permet de lancer une partie, gérer les scores et valider les résultats
 const NouvellePartie = () => {
   const [joueurs, setJoueurs] = useState(["", "", "", ""])
   const [profils, setProfils] = useState<(any | null)[]>([null, null, null, null])
@@ -98,7 +95,6 @@ const NouvellePartie = () => {
   return (
     <div className="min-h-screen bg-teal-700 flex flex-col justify-between p-6">
       <div className="flex flex-col lg:flex-row justify-between gap-8">
-        {/* Paramètres */}
         <Card className="bg-[#fce7c7] w-full max-w-md">
           <CardHeader>
             <CardTitle>Paramètres partie</CardTitle>
@@ -158,7 +154,6 @@ const NouvellePartie = () => {
           </CardContent>
         </Card>
 
-        {/* Score */}
         {partieLancee && (
           <div className="flex-1 flex flex-col gap-4">
             <Card className="bg-neutral-100 flex-1">
@@ -212,7 +207,6 @@ const NouvellePartie = () => {
               </CardContent>
             </Card>
 
-            {/* Validation finale */}
             <Card className="bg-yellow-300 p-4">
               <div className="flex justify-between items-center">
                 <span className="font-bold">
@@ -237,7 +231,6 @@ const NouvellePartie = () => {
         )}
       </div>
 
-      {/* Bandeau de confirmation */}
       {valide && (
         <div className="bg-green-600 text-white p-4 mt-4 rounded-md flex justify-between items-center">
           <span>🎉 Partie enregistrée, classement mis à jour</span>
